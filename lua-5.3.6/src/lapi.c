@@ -168,7 +168,11 @@ LUA_API int lua_gettop (lua_State *L) {
   return cast_int(L->top - (L->ci->func + 1));
 }
 
+/* 
+  idx：0 清空整个栈
+  idx：> 0，将栈的大小设置为 idx，多的部分直接清空，少的部分用 nil 填充
 
+ */
 LUA_API void lua_settop (lua_State *L, int idx) {
   StkId func = L->ci->func;
   lua_lock(L);
@@ -528,7 +532,14 @@ LUA_API const char *lua_pushfstring (lua_State *L, const char *fmt, ...) {
   return ret;
 }
 
+/* 
+  创建一个新的闭包，推入栈顶。
+  n：表示upvalue的个数， 这些upvalue会被弹出 封装到新的闭包中。
+  在fn中，可以通过lua_upvalueindex(i)来访问这些upvalue，i表示第几个upvalue
 
+  这个主要用于从c代码创建闭包。
+  lua的解释执行到CLOSURE 指令时，虽然也会创建闭包，但是是调用 luaF_newLclosure 函数创建。
+ */
 LUA_API void lua_pushcclosure (lua_State *L, lua_CFunction fn, int n) {
   lua_lock(L);
   if (n == 0) {
@@ -608,7 +619,14 @@ LUA_API int lua_getglobal (lua_State *L, const char *name) {
   return auxgetstr(L, luaH_getint(reg, LUA_RIDX_GLOBALS), name);
 }
 
+/* 
+  取出table中的元素，放到栈顶。 table[key]
+  idx:表示table在栈中的位置
 
+  一般用于未知key的情况，先把key放到栈顶，然后调用lua_gettable(L, -2)将其取出
+    lua_pushstring(L, "key");
+    lua_gettable(L, -2);
+ */
 LUA_API int lua_gettable (lua_State *L, int idx) {
   StkId t;
   lua_lock(L);
@@ -619,12 +637,26 @@ LUA_API int lua_gettable (lua_State *L, int idx) {
 }
 
 
+/* 
+  取出table中的元素，放到栈顶。 table[key]
+  idx:表示table在栈中的位置
+
+  一般用于已知key的情况下，比如 "__index", "__newindex" 等元方法名字
+    lua_getfield(L, -1, "key");
+ */
 LUA_API int lua_getfield (lua_State *L, int idx, const char *k) {
   lua_lock(L);
   return auxgetstr(L, index2addr(L, idx), k);
 }
 
+/* 
+  取出table中的元素，放到栈顶。 table[n]
+  idx:表示table在栈中的位置
+  n:表示数组下标
 
+  一般用于数组下标的情况下，比如 table[1], table[2] 等
+    lua_geti(L, -1, 1); 
+ */
 LUA_API int lua_geti (lua_State *L, int idx, lua_Integer n) {
   StkId t;
   const TValue *slot;
@@ -740,6 +772,10 @@ LUA_API int lua_getuservalue (lua_State *L, int idx) {
 /*
 ** t[k] = value at the top of the stack (where 'k' is a string)
 */
+
+/* 
+  内部函数，用于实现 t[k] = value
+ */
 static void auxsetstr (lua_State *L, const TValue *t, const char *k) {
   const TValue *slot;
   TString *str = luaS_new(L, k);
@@ -755,14 +791,28 @@ static void auxsetstr (lua_State *L, const TValue *t, const char *k) {
   lua_unlock(L);  /* lock done by caller */
 }
 
-
+/*
+  弹出栈顶的值，设置为全局变量。 _G[name] = value
+  一般用法，先把value放到栈顶，然后调用lua_setglobal(L, "name")将其设置到_G中
+    lua_pushstring(L, "value");
+    lua_setglobal(L, "name");
+ */
 LUA_API void lua_setglobal (lua_State *L, const char *name) {
   Table *reg = hvalue(&G(L)->l_registry);
   lua_lock(L);  /* unlock done in 'auxsetstr' */
   auxsetstr(L, luaH_getint(reg, LUA_RIDX_GLOBALS), name);
 }
 
+/* 
+  弹出栈顶的值，设置到table中。 table[key] = value
+  index:表示table在栈中的位置，
 
+  和lua_setfield类似，但是是从栈顶弹出2个值。
+  一般用法，先把key和value放到栈顶，然后调用lua_settable(L, -3)将其设置到table中
+    lua_pushstring(L, "key");
+    lua_pushstring(L, "value");
+    lua_settable(L, -3);
+ */
 LUA_API void lua_settable (lua_State *L, int idx) {
   StkId t;
   lua_lock(L);
@@ -773,7 +823,16 @@ LUA_API void lua_settable (lua_State *L, int idx) {
   lua_unlock(L);
 }
 
+/* 
+  弹出栈顶的值，设置到table中。 table[key] = value
+  index:表示table在栈中的位置，
+  k:表示key
 
+  一般和lua_push 类组合使用， 用于已知key的情况下，比如 "__index", "__newindex" 等元方法名字
+    1. 将table放到栈顶
+    2. 使用lua_push* 将目标元素放到栈顶
+    3. 使用lua_setfield(L, -2, k) 将key和value设置到table中
+ */
 LUA_API void lua_setfield (lua_State *L, int idx, const char *k) {
   lua_lock(L);  /* unlock done in 'auxsetstr' */
   auxsetstr(L, index2addr(L, idx), k);

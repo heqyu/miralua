@@ -295,7 +295,7 @@ LUALIB_API int luaL_execresult (lua_State *L, int stat) {
 ** Userdata's metatable manipulation
 ** =======================================================
 */
-
+// 通常为每个类型的对象创建一个元表，操作之后，将元表压入栈顶
 LUALIB_API int luaL_newmetatable (lua_State *L, const char *tname) {
   if (luaL_getmetatable(L, tname) != LUA_TNIL)  /* name already in use? */
     return 0;  /* leave previous value on top, but return 0 */
@@ -329,7 +329,10 @@ LUALIB_API void *luaL_testudata (lua_State *L, int ud, const char *tname) {
   return NULL;  /* value is not a userdata with a metatable */
 }
 
-
+/* 
+  检查栈上的第 ud 个元素是否是一个 userdata，并且 userdata 的元表是 tname。
+  如果是，返回 userdata 的地址，否则，抛出一个错误。
+ */
 LUALIB_API void *luaL_checkudata (lua_State *L, int ud, const char *tname) {
   void *p = luaL_testudata(L, ud, tname);
   if (p == NULL) typeerror(L, ud, tname);
