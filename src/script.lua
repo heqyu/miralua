@@ -2,6 +2,7 @@
 
 local MyClass = import('MyClass')
 local obj = MyClass.new(10)
+print("obj", obj)  
 print("obj GetValue", obj:GetValue())  -- 输出：10
 obj:SetValue(20)
 print("obj GetValue", obj:GetValue())  -- 输出：20
@@ -16,7 +17,7 @@ print("obj name", obj.name)  -- 输出：Hello
 
 -- lua侧新增的变量会存储到c++的元表中
 obj.name222 = "aaaa"
-print(obj.name222)  -- 输出：aaaa
+print("obj name222", obj.name222)  -- 输出：aaaa
 
 
 local obj2 = MyClass.new(20)
