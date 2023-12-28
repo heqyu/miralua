@@ -1,0 +1,17 @@
+# 设置lua源文件路径
+set(LUA_SRC_DIR ./lua-5.3.6/src)
+
+# 添加lua源文件
+file(GLOB LUA_SRC ${LUA_SRC_DIR}/*.c)
+
+# 编译lua为静态库
+add_library(lua STATIC ${LUA_SRC})
+
+# 添加lua的头文件路径
+target_include_directories(lua PUBLIC ${LUA_SRC_DIR})
+
+# 添加您的工程源文件
+add_executable(miralua src/main.cpp)
+
+# 在您的工程中引用lua静态库
+target_link_libraries(miralua lua)

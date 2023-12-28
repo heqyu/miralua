@@ -1,0 +1,24 @@
+# C++ object files
+*.o
+*.a
+*.so
+*.dll
+*.exe
+
+# Lua bytecode files
+*.luac
+
+# Visual Studio cache directory
+.vs/
+
+# CLion cache directory
+.idea/
+
+# Other temporary files
+*.log
+*.tmp
+
+Debug/
+x64/
+Release/
+build/
