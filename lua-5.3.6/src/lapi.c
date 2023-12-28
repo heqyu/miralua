@@ -901,7 +901,10 @@ LUA_API void lua_rawsetp (lua_State *L, int idx, const void *p) {
   lua_unlock(L);
 }
 
-
+/* 
+  将栈顶的元素（应该table或者nil）设为栈上objindex位置（应该是table或者userdata）的元表，然后弹出栈顶元素。
+  objindex：表示table或者userdata在栈中的位置
+ */
 LUA_API int lua_setmetatable (lua_State *L, int objindex) {
   TValue *obj;
   Table *mt;

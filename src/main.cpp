@@ -6,7 +6,7 @@ extern "C" {
 #include <lualib.h>
 }
 
-#include <string>
+#include <string> 
 
 class MyClass
 {
@@ -25,22 +25,31 @@ public:
     std::string name;
 };
 
-static int l_MyClass_constructor(lua_State *L) {
+/* 
+    1. 在lua侧，调用MyClass.new(value)时，会调用这个函数
+    2. 创建的c++对象都是以userdata的形式存在的
+    3. 为了让这个userdata可以调用c++的方法，需要给userdata设置元表
+ */
+static int l_MyClass_Ctor(lua_State *L) {
+    // 1. 从栈上取出构造函数需要的参数
     int value = luaL_checkinteger(L, 1);
+    // 2. 创建userdata，压入栈顶
     MyClass** udata = (MyClass**)lua_newuserdata(L, sizeof(MyClass*));
+    // 3. 调用构造函数，创建对象，给userdata赋值
     *udata = new MyClass(value);
+    // 4. 设置userdata的元表
     luaL_getmetatable(L, "MyClass");
     lua_setmetatable(L, -2);
     return 1;
 }
 
-static int l_MyClass_get_value(lua_State *L) {
+static int l_MyClass_GetValue(lua_State *L) {
     MyClass* myClass = *(MyClass**)luaL_checkudata(L, 1, "MyClass");
     lua_pushinteger(L, myClass->GetValue());
     return 1;
 }
 
-static int l_MyClass_set_value(lua_State *L) {
+static int l_MyClass_SetValue(lua_State *L) {
     MyClass* myClass = *(MyClass**)luaL_checkudata(L, 1, "MyClass");
     int value = luaL_checkinteger(L, 2);
     myClass->SetValue(value);
@@ -69,15 +78,20 @@ static int l_MyClass_newindex(lua_State *L) {
     if (std::string(key) == "name") {
         const char* value = luaL_checkstring(L, 3);
         myClass->name = value;
+    }else{
+        lua_getmetatable(L, 1);
+        lua_pushvalue(L, 2);
+        lua_pushvalue(L, 3);
+        lua_settable(L, -3);
     }
 
     return 0;
 }
 
 static const luaL_Reg MyClass_methods[] = {
-    {"new", l_MyClass_constructor},
-    {"GetValue", l_MyClass_get_value},
-    {"SetValue", l_MyClass_set_value},
+    {"new", l_MyClass_Ctor},
+    {"GetValue", l_MyClass_GetValue},
+    {"SetValue", l_MyClass_SetValue},
     {NULL, NULL}
 };
 
@@ -128,7 +142,7 @@ int main() {
     lua_close(L);
 
     // wait for input
-    std::cin.get();
+    // std::cin.get();
 
     return 0;
 }
