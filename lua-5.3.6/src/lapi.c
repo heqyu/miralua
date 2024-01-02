@@ -238,6 +238,10 @@ LUA_API void lua_copy (lua_State *L, int fromidx, int toidx) {
 }
 
 
+/* 
+  将栈上idx位置的值，拷贝到栈顶
+  一般用法：配合rawget、rawset等需要栈顶的值作为操作参数的
+ */
 LUA_API void lua_pushvalue (lua_State *L, int idx) {
   lua_lock(L);
   setobj2s(L, L->top, index2addr(L, idx));
@@ -675,7 +679,10 @@ LUA_API int lua_geti (lua_State *L, int idx, lua_Integer n) {
   return ttnov(L->top - 1);
 }
 
-
+/* 
+  和lua_getfield类似，但是不调用元方法
+  key是堆栈顶部的值，idx是table在堆栈中的位置
+ */
 LUA_API int lua_rawget (lua_State *L, int idx) {
   StkId t;
   lua_lock(L);
