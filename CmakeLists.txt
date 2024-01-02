@@ -28,7 +28,8 @@ target_include_directories(lua PUBLIC ${LLVMDIR}/include)
 
 
 # 添加我的工程源文件
-add_executable(miralua src/main.cpp)
+file(GLOB SOURCES "src/*.cpp" "src/*.h")
+add_executable(miralua ${SOURCES})
 
 # 在我的工程中引用lua静态库
 target_link_libraries(miralua lua)

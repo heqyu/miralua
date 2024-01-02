@@ -6,6 +6,8 @@ extern "C" {
 #include <lualib.h>
 }
 
+#include <iostream>
+
 #define ENABLE_LUA_DEBUG 1
 #if ENABLE_LUA_DEBUG
 // 辅助函数，打印lua栈
