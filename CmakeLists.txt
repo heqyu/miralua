@@ -1,12 +1,15 @@
 # cmake版本
 cmake_minimum_required(VERSION 3.0)
+project(miralua)
+
 # 支持utf-8
 if(MSVC)
     add_compile_options(/utf-8)
 endif()
 
 # 设置lua源文件路径
-set(LUA_SRC_DIR ./deps/lua-5.3.6/src)
+set(LUA_SRC_DIR ${CMAKE_CURRENT_SOURCE_DIR}/deps/lua-5.3.6/src)
+set(LLVMDIR ${CMAKE_CURRENT_SOURCE_DIR}/deps/LLVM)
 
 # 添加lua源文件
 file(GLOB LUA_SRC ${LUA_SRC_DIR}/*.c)
@@ -20,9 +23,14 @@ add_library(lua STATIC ${LUA_SRC})
 
 # 添加lua的头文件路径
 target_include_directories(lua PUBLIC ${LUA_SRC_DIR})
+# 添加llvm的头文件路径
+target_include_directories(lua PUBLIC ${LLVMDIR}/include)
 
-# 添加您的工程源文件
+
+# 添加我的工程源文件
 add_executable(miralua src/main.cpp)
 
-# 在您的工程中引用lua静态库
+# 在我的工程中引用lua静态库
 target_link_libraries(miralua lua)
+# 在我的工程中引用llvm静态库
+target_link_libraries(miralua ${LLVMDIR}/lib/libclang.lib)
